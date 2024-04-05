@@ -107,14 +107,13 @@ void loop()
             windowSum += value;
             deleteatbegin();
 
-            normalisedValue = windowSum / windowSize;
+            int normalisedValue = windowSum / windowSize;
 
             // If the sensor value is GREATER than the THRESHOLD
             if (normalisedValue > threshold && f == 0)
             {
-                int angle = anlge + 10 > 90 ? 90 : angle + 10;
+                angle = angle + 10 > 90 ? 90 : angle + 10;
                 SERVO_1.write(angle);
-                delay(100);
             }
 
             // If the sensor is LESS than the THRESHOLD
@@ -123,17 +122,16 @@ void loop()
                 //  f = 0;
                 angle = angle - 10 > 0 ? angle - 10 : 0;
                 SERVO_1.write(angle);
-                delay(100);
             }
-
-            // You can use serial monitor to set THRESHOLD properly, comparing the values shown when you open and close your hand.
-            Serial.println(normalisedValue);
+            delay(100);
 
             // update f from input pin
         }
 
         afterCalCount++;
     }
-
+    // You can use serial monitor to set THRESHOLD properly, comparing the values shown when you open and close your hand.
+    Serial.println(value);
+    delay(10);
     loopCount++;
 }
