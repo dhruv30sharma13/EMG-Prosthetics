@@ -2,9 +2,10 @@
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 // Threshold for servo motor control with muscle sensor.
-#define THRESHOLD 100
+// #define THRESHOLD 100
 
 // Pin number where the sensor is connected. (Analog 0)
 #define EMG_PIN 5
@@ -16,6 +17,46 @@ int angle = 0;
 
 // Define Servo motor
 Servo SERVO_1;
+
+struct node
+{
+    int data;
+    struct node *next;
+};
+
+struct node *head = NULL;
+struct node *tail = NULL;
+
+void insertatend(int data)
+{
+    // create a link
+    struct node *lk = (struct node *)malloc(sizeof(struct node));
+    lk->data = data;
+    lk->next = NULL;
+
+    if (head == NULL)
+    {
+        // if list is empty, this new node is the first node
+        head = lk;
+        tail = lk;
+    }
+    else
+    {
+        // otherwise, append the new node at the end and update the tail
+        tail->next = lk;
+        tail = lk;
+    }
+}
+
+void deleteatbegin()
+{
+    if (head != NULL)
+    {
+        struct node *temp = head;
+        head = head->next;
+        free(temp);
+    }
+}
 
 void setup()
 {
@@ -30,36 +71,69 @@ void setup()
     SERVO_1.attach(SERVO_PIN);
 }
 
+int loopCount = 0;
+int caliberationTime = 1000;
+int caliberationValue = 100;
+int averageEMG = 0;
+long long threshold = 0;
+
+int windowSize = 100;
+int afterCalCount = 0;
+long long windowSum = 0;
+
 void loop()
 {
-    // Moving average
-    int value = 0;
-    int average_window = 1000 for (int i = 0; i < average_window; i++)
+    int value = analogRead(EMG_PIN);
+    if (loopCount <= caliberationTime)
     {
-        value += analogRead(EMG_PIN);
-        delay(1);
+        threshold += value;
     }
-    value /= average_window;
-
-    // If the sensor value is GREATER than the THRESHOLD
-    if (value > THRESHOLD && f == 0)
+    else if (loopCount == caliberationTime + 1)
     {
-        int angle = anlge + 10 > 90 ? 90 : angle + 10;
-        SERVO_1.write(angle);
-        delay(100);
+        threshold /= caliberationTime;
+        threshold += caliberationValue;
     }
-
-    // If the sensor is LESS than the THRESHOLD
     else
     {
-        //  f = 0;
-        angle = angle - 10 > 0 ? angle - 10 : 0;
-        SERVO_1.write(angle);
-        delay(100);
+        insertatend(value);
+        if (afterCalCount <= windowSize)
+        {
+            windowSum += value;
+        }
+
+        else
+        {
+            windowSum -= head->data;
+            windowSum += value;
+            deleteatbegin();
+
+            normalisedValue = windowSum / windowSize;
+
+            // If the sensor value is GREATER than the THRESHOLD
+            if (normalisedValue > threshold && f == 0)
+            {
+                int angle = anlge + 10 > 90 ? 90 : angle + 10;
+                SERVO_1.write(angle);
+                delay(100);
+            }
+
+            // If the sensor is LESS than the THRESHOLD
+            else
+            {
+                //  f = 0;
+                angle = angle - 10 > 0 ? angle - 10 : 0;
+                SERVO_1.write(angle);
+                delay(100);
+            }
+
+            // You can use serial monitor to set THRESHOLD properly, comparing the values shown when you open and close your hand.
+            Serial.println(normalisedValue);
+
+            // update f from input pin
+        }
+
+        afterCalCount++;
     }
 
-    // You can use serial monitor to set THRESHOLD properly, comparing the values shown when you open and close your hand.
-    Serial.println(value);
-
-    // update f from input pin
+    loopCount++;
 }
