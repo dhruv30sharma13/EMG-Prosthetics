@@ -8,7 +8,7 @@
 // #define THRESHOLD 100
 
 // Pin number where the sensor is connected. (Analog 0)
-#define EMG_PIN 5
+#define EMG_PIN A5
 
 // Pin number where the servo motor is connected. (Digital PWM 3)
 #define SERVO_PIN 3
@@ -73,24 +73,24 @@ void setup()
 
 int loopCount = 0;
 int caliberationTime = 1000;
-int caliberationValue = 100;
+int caliberationValue = 2;
 int averageEMG = 0;
 long long threshold = 0;
 
-int windowSize = 100;
+int windowSize = 10;
 int afterCalCount = 0;
 long long windowSum = 0;
 
 void loop()
 {
     int value = analogRead(EMG_PIN);
-    if (loopCount <= caliberationTime)
+    if (loopCount <= caliberationTime  && loopCount>500)
     {
         threshold += value;
     }
     else if (loopCount == caliberationTime + 1)
     {
-        threshold /= caliberationTime;
+        threshold /= (caliberationTime/2);
         threshold += caliberationValue;
     }
     else
@@ -123,7 +123,7 @@ void loop()
                 angle = angle - 10 > 0 ? angle - 10 : 0;
                 SERVO_1.write(angle);
             }
-            delay(100);
+            delay(50);
 
             // update f from input pin
         }
